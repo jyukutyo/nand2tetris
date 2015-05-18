@@ -55,12 +55,13 @@ CHIP ALU {
 
         Mux16(a=and, b=sum, sel=f, out=compute);
         Not16(in=compute, out=negatecompute);
-        Mux16(a=compute, b=negatecompute, sel=no, out=out);
+        Mux16(a=compute, b=negatecompute, sel=no, out=out, out[0..7]=halfa, out[8..15]=halfb, out[15]=negate);
 
-        Or(a=x[0], b=y[0], out=or14);
-        Mux16(a[0]=true, b[0]=false, sel=or14, out=ans1);
-        Mux16(a[0]=false, b[0]=true, sel=x[0], out=ans2);        
-
+        Or8Way(in=halfa, out=or1);
+        Or8Way(in=halfb, out=or2);
+        Or(a=or1, b=or2, out=or3);
         
+        Mux(a=true, b=false, sel=or3, out=zr);
+        Mux(a=false, b=true, sel=negate, out=ng);        
         
 }
