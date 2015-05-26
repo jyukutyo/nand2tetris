@@ -16,5 +16,31 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+// pattern 1
+//    Inc16(in=temp5, out=temp1);
+//    Mux16(a[0]=false, b=temp1, sel=inc, out=temp2);
+//    Mux16(a=temp2, b=in, sel=load, out=temp3);
+//    Mux16(a=temp3, b[0]=false, sel=reset, out=temp4);
+
+//    Or(a=load, b=reset, out=flag1);
+//    Or(a=flag1, b=inc, out=flag2);
+
+//    Register(in=temp4, load=flag2, out=out, out=temp5);
+
+// pattern 2
+    Register(in=temp5, load=true, out=out, out=temp1);
+    Inc16(in=temp1, out=temp2);
+    Mux16(a=temp1, b=temp2, sel=inc, out=temp3);
+    Mux16(a=temp3, b=in, sel=load, out=temp4);
+    Mux16(a=temp4, b=false, sel=reset, out=temp5);
+
+// pattern 3
+//    Inc16(in=w0,out=inc1);
+//    Mux8Way16(a=in,b=false,c=inc1,d=false,e=in,f=false,g=in,h=false,sel[0]=reset,sel[1]=inc,sel[2]=load,out=in2);
+
+//    Or(a=reset,b=inc,out=w1);
+//    Or(a=w1,b=load,out=w2);
+
+//    Register(in=in2,load=w2,out=out,out=w0);
+
 }
