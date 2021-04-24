@@ -39,5 +39,72 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    Mux16(a=instruction, b=aluOut, sel=instruction[15], out=immediateOrALUOutput);
+
+    Not(in=instruction[15], out=isAInst);
+    Or(a=isAInst, b=instruction[5], out=isARegLoad);
+
+    ARegister(in=immediateOrALUOutput, load=isARegLoad, out=aRegister, out[0..14]=addressM);
+    Mux16(a=aRegister, b=inM, sel=instruction[12], out=aRegisterOrInM);
+    
+    ALU(x=dRegister, y=aRegisterOrInM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, out=outM, zr=aluZr, ng=aluNg);
+
+    And(a=instruction[4], b=instruction[15], out=isDRegLoad);
+    DRegister(in=aluOut, load=isDRegLoad, out=dRegister);
+    And(a=instruction[3], b=instruction[15], out=writeM);
+
+    // isJump is true unless jump flags are all false
+    Or(a=instruction[0], b=instruction[1], out=noJumpTemp);
+    Or(a=noJumpTemp, b=instruction[2], out=isJump);
+
+    Not(in=instruction[2], out=notJ1);
+    Not(in=instruction[1], out=notJ2);
+    And(a=instruction[0], b=notJ1, out=grTemp);
+    And(a=grTemp, b=notJ2, out=grZero);
+    Not(in=aluNg, out=notNg);
+    And(a=grZero, b=notNg, out=temp1);
+    Not(in=aluZr, out=notZr);
+    And(a=temp1, b=notZr, out=isJGT);
+
+    And(a=notJ1, b=instruction[1], out=eqTemp);
+    Not(in=instruction[0], out=notJ3);
+    And(a=eqTemp, b=notJ3, out=temp2);
+    And(a=temp2, b=notNg, out=temp3);
+    And(a=temp3, b=aluZr, out=isJEQ);
+
+    And(a=instruction[2], b=notJ2, out=ltTemp);
+    And(a=ltTemp, b=notJ3, out=temp4);
+    And(a=temp4, b=aluNg, out=temp5);
+    And(a=temp5, b=notZr, out=isJLT);
+
+    And(a=instruction[2], b=notJ2, out=neTemp);
+    And(a=neTemp, b=instruction[0], out=temp6);
+    And(a=temp6, b=notZr, out=isJNE);
+
+    And(a=instruction[2], b=instruction[1], out=leTemp);
+    And(a=leTemp, b=notJ3, out=temp7);
+    Or(a=aluNg, b=aluZr, out=temp8);
+    And(a=temp7, b=temp8, out=isJLE);
+
+    And(a=notJ1, b=instruction[1], out=geTemp);
+    And(a=geTemp, b=instruction[0], out=temp9);
+    And(a=temp9, b=notNg, out=isJGE);
+
+    And(a=instruction[2], b=instruction[1], out=gotoTemp);
+    And(a=gotoTemp, b=instruction[0], out=isGoto);
+
+    Or(a=isJGT, b=isJEQ, out=temp10);
+    Or(a=temp10, b=isJLT, out=temp11);
+    Or(a=temp11, b=isJNE, out=temp12);
+    Or(a=temp12, b=isJLE, out=temp13);
+    Or(a=temp13, b=isJGE, out=temp14);
+    Or(a=temp14, b=isGoto, out=isValid);
+
+
+    And(a=isJump, b=isValid, out=isJumpValid);
+    And(a=isJumpValid, b=instruction[15], out=pcLoad);
+
+    Not(in=pcLoad, out=isInc);
+    PC(in=aRegister, load=pcLoad, inc=isInc, reset=reset, out[0..14]=pc);
+
 }
