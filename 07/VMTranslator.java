@@ -10,6 +10,7 @@ class VMTranslator {
 
     public static void main(String... args) throws Exception {
         Path vmFilePath = Paths.get(args[0]);
+        String className = vmFilePath.getFileName().toString().replace(".vm", "");
         List<String> allLines = Files.readAllLines(vmFilePath);
 
         List<String> allCodeLines = allLines
@@ -52,7 +53,13 @@ class VMTranslator {
                     } else if ("temp".equals(target)) {
                         asmInsts.add("@5");
                         asmInsts.add("D=A");
-                    }                    
+                    } else if ("pointer".equals(target)) {
+                        asmInsts.add("@3");
+                        asmInsts.add("D=A");
+                    } else if ("static".equals(target)) {
+                        asmInsts.add("@" + className + "." + operand);
+                        asmInsts.add("D=A");
+                    }
                     asmInsts.add("@" + operand);
                     asmInsts.add("A=D+A");
                     asmInsts.add("D=M");
@@ -83,6 +90,12 @@ class VMTranslator {
                 } else if ("temp".equals(target)) {
                     asmInsts.add("@5");
                     asmInsts.add("D=A");                    
+                } else if ("pointer".equals(target)) {
+                    asmInsts.add("@3");
+                    asmInsts.add("D=A");
+                } else if ("static".equals(target)) {
+                    asmInsts.add("@" + className + "." + operand);
+                    asmInsts.add("D=A");
                 }
                 asmInsts.add("@" + operand);
                 asmInsts.add("D=D+A");
