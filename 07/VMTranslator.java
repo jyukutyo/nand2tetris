@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.*;
 
@@ -168,6 +170,8 @@ class VMTranslator {
                 asmInsts.add("M=M+1");
             } 
        }
-       asmInsts.forEach(System.out::println);
+       
+       Files.write(Paths.get(vmFilePath.getParent().toString(), className + ".asm"), asmInsts,
+                    Charset.forName("UTF-8"), StandardOpenOption.CREATE);
     }
 }
