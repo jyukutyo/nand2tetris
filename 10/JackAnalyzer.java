@@ -39,311 +39,365 @@ class JackAnalyzer {
 
         public void compileClass() {
             output.add("<class>");
-            for (int i = 0; i < 3; i++) {
-                if (!t.hasMoreTokens()) {
-                    throw new RuntimeException();
-                }
-                t.advance();
-                outputToken();
-            }
             while (t.hasMoreTokens()) {
                 t.advance();
-                if (t.tokenType() == TokenType.KEYWORD) {
+                if (t.isKeyWord()) {
                     switch (t.keyWord()) {
-                        case STATIC, FIELD -> compileClassVarDec();
-                        case METHOD, CONSTRUCTOR, FUNCTION -> compileSubroutine();
+                        case CLASS -> outputToken();
+                        case STATIC, FIELD -> {
+                            if (t.hasMoreTokens()) {
+                                compileClassVarDec();
+                            }
+                        }
+                        case METHOD, CONSTRUCTOR, FUNCTION -> {
+                            if (t.hasMoreTokens()) {
+                                compileSubroutineDec();
+                            }
+                        }
                         default -> {}
                     }
                 } else {
-                    throw new RuntimeException(t.value() + ":" + t.line());
+                    outputToken();
                 }
             }
             output.add("</class>");
         }
 
-        public void compileParameterList() {
-            outputToken();
-            output.add("<parameterList>");
-            while (t.hasMoreTokens()) {
-                t.advance();
-                if (t.tokenType() == TokenType.SYMBOL && ")".equals(t.symbol())) {
-                    break;
-                }
-                outputToken();
-            }
-            output.add("</parameterList>");
-        }
-
-        public void compileVarDec() {
-            output.add("<varDec>");
-            outputToken();
-            while (t.hasMoreTokens()) {
-                t.advance();
-                outputToken();
-                if (t.tokenType() == TokenType.SYMBOL && ";".equals(t.symbol())) {
-                    break;
-                }
-            }
-            output.add("</varDec>");
-        }
-
-        public void compileTerm() {
-            output.add("<term>");
-            TokenType previousType = t.tokenType();
-            OUTER: while (t.hasMoreTokens()) {
-                switch (t.tokenType()) {
-                    case SYMBOL -> {
-                        switch (t.symbol()) {
-                            case "]", ")", ";", "<", ">", "=", "*", "/", "&", "|", "+" -> { 
-                                break OUTER;
-                            }
-                        }
-                        if (previousType == TokenType.IDENTIFIER && "(".equals(t.symbol())) {
-                            outputToken();
-                            compileExpressionList();
-                            outputToken();
-                        } else if ("[".equals(t.symbol()) || "(".equals(t.symbol())) {
-                            outputToken();
-                            t.advance();
-                            compileExpression();
-                            outputToken();
-                        } else if ("-".equals(t.symbol()) || "~".equals(t.symbol())) {
-                            compileTerm();
-                        } else {
-                            outputToken();
-                        }
-                    }
-                    default -> {
-                        outputToken();
-                    } 
-                } 
-                previousType = t.tokenType();
-                t.advance();
-            }
-            output.add("</term>");
-        }
-
-        public void compileExpressionList() {
-            output.add("<expressionList>");
-            while (t.hasMoreTokens()) {
-                if (t.tokenType() == TokenType.SYMBOL && ")".equals(t.symbol())) {
-                    break;
-                } else if (t.tokenType() == TokenType.SYMBOL && ",".equals(t.symbol())) {
-                    outputToken();
-                }
-                t.advance();
-                if (t.tokenType() == TokenType.SYMBOL && ")".equals(t.symbol())) {
-                    break;
-                }                 
-                compileExpression();
-            }
-            output.add("</expressionList>");            
-        }
-
-        public void compileExpression() {
-            output.add("<expression>");
+        public void compileClassVarDec() {
+            output.add("<classVarDec>");
             do {
-                if (t.tokenType() == TokenType.SYMBOL) {
-                    switch (t.symbol()) {
-                        case "+", "-", "*", "/", "&", "|", "<", ">" -> {
-                            outputToken();
-                            if (t.hasMoreTokens()) {
-                                t.advance();
-                            }
-                            compileTerm();
-                        }
-                        case "=" -> {
-                            if (t.hasMoreTokens()) {
-                                t.advance();
-                            }
-                            compileTerm();
-                        }                        
-                        case "]", ")" -> {
-                            output.add("</expression>");
-                            return;
-                        }
-                        case ";" -> {
-                            output.add("</expression>");
-                            outputToken();
-                            return;
-                        }
-                    }
-                } else {
-                    compileTerm();
+                outputToken();
+                t.advance();
+                if (t.isSymbol(";")) {
+                    break;
                 }
             } while (t.hasMoreTokens());
-            output.add("</expression>");
-        }
-
-        public void compileReturn() {
-            output.add("<returnStatement>");
             outputToken();
-            t.hasMoreTokens();
             t.advance();
-            if (t.tokenType() != TokenType.SYMBOL) {
-                compileExpression();
-            }
-            outputToken();
-            output.add("</returnStatement>");            
+            output.add("</classVarDec>");
         }
 
-        public void compileStatement() {
-            if (t.tokenType() == TokenType.KEYWORD) {
-                switch (t.keyWord()) {
-                    case LET -> compileLet();
-                    case IF -> compileIf();
-                    case WHILE -> compileWhile();
-                    case DO -> compileDo();
-                    case RETURN -> compileReturn();
-                    default -> {}
-                }
-            } else {
-                throw new RuntimeException();
-            }
-        }
-
-        public void compileLet() {
-            output.add("<letStatement>");
-            outputToken();
-            if (t.hasMoreTokens()) {
-                do {
-                    if (t.tokenType() == TokenType.SYMBOL && ";".equals(t.symbol())) {
-                        break;
-                    }                
-                    t.advance();
-                    outputToken();
-                    if (t.tokenType() == TokenType.SYMBOL && "[".equals(t.symbol())) {
-                        if (t.hasMoreTokens()) {
-                            t.advance();
-                        }
-                        compileExpression();
-                        outputToken();
-                    } else if (t.tokenType() == TokenType.SYMBOL && "=".equals(t.symbol())) {
-                        compileExpression();
-                    } 
-
-                } while (t.hasMoreTokens());
-            }
-            output.add("</letStatement>");
-        }
-
-        public void compileIf() {
-            output.add("<ifStatement>");
-            output.add("</ifStatement>");
-        }
-
-        public void compileWhile() {
-            output.add("<whileStatement>");
-            outputToken();
-            while (t.hasMoreTokens()) {
-                if (t.tokenType() == TokenType.SYMBOL && "}".equals(t.symbol())) {
-                    outputToken();
-                    break;
-                }
-                t.advance();
-                if (t.tokenType() == TokenType.SYMBOL && ("(".equals(t.symbol()))) {
-                    outputToken();
-                    if (t.hasMoreTokens()) {
-                        t.advance();
-                    }
-                    compileExpression();
-                    outputToken();
-                } else if (t.tokenType() == TokenType.SYMBOL && "{".equals(t.symbol())) {
-                    outputToken();
-                    if (t.hasMoreTokens()) {
-                        t.advance();
-                        compileStatements();
-                    }
-                }                    
-            }
-            output.add("</whileStatement>");
-            if (t.hasMoreTokens()) {
-                t.advance();
-            }
-        }
-
-        public void compileDo() {
-            output.add("<doStatement>");
-            outputToken();
-            if (t.hasMoreTokens()) {
-                do {
-                    if (t.tokenType() == TokenType.SYMBOL && ";".equals(t.symbol())) {
-                        break;
-                    }                
-                    t.advance();
-                    outputToken();
-                    if (t.tokenType() == TokenType.SYMBOL && "(".equals(t.symbol())) {
-                        compileExpressionList();
-                        outputToken();
-                    } 
-                } while (t.hasMoreTokens());
-            }
-            output.add("</doStatement>");
-        }
-
-        public void compileStatements() {
-            output.add("<statements>");
-            while (t.hasMoreTokens()) {
-                if (t.tokenType() == TokenType.SYMBOL && ";".equals(t.symbol())) {
-                    t.advance();
-                }
-                if (t.tokenType() == TokenType.SYMBOL && "}".equals(t.symbol())) {
-                    break;
-                }                    
-                compileStatement();
-            }
-            output.add("</statements>");
-        }
-
-        public void compileSubroutineBody() {
-            output.add("<subroutineBody>");
-            outputToken();
-            while (t.hasMoreTokens()) {
-                t.advance();
-                if (t.tokenType() == TokenType.KEYWORD && t.keyWord() == KeyWordType.VAR) {
-                    compileVarDec();
-                } else {
-                    compileStatements();
-                    outputToken();
-                    break;
-                }
-            }
-            output.add("</subroutineBody>");
-        }
-
-        public void compileSubroutine() {
+        public void compileSubroutineDec() {
             output.add("<subroutineDec>");
-            outputToken();
-            while (t.hasMoreTokens()) {
-                t.advance();
-                if (t.tokenType() == TokenType.SYMBOL && "(".equals(t.symbol())) {
+            do {
+                if (t.isSymbol("(")) {
+                    outputToken();
+                    t.advance();
                     compileParameterList();
                     outputToken();
-                } else if (t.tokenType() == TokenType.SYMBOL && "{".equals(t.symbol())) {
+                } else if (t.isSymbol("{")) {
                     compileSubroutineBody();
                     break;
                 } else {
                     outputToken();
                 }
-            }
-            output.add("</subroutineDec>");
-            outputToken();
-            if (t.hasMoreTokens()) {
                 t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</subroutineDec>");
+        }
+
+        public void compileParameterList() {
+            output.add("<parameterList>");
+            while (t.hasMoreTokens()) {
+                if (t.isSymbol(")")) {
+                    break;
+                }
+                outputToken();
+                t.advance();
+            };
+            output.add("</parameterList>");
+        }
+
+        public void compileSubroutineBody() {
+            output.add("<subroutineBody>");
+            do {
+                if (t.isSymbol("}")) {
+                    outputToken();
+                    break;
+                } else if (t.isSymbol("{")) {
+                    outputToken();
+                } else if (t.isKeyWord(KeyWordType.VAR)) {
+                    compileVarDec();
+                } else {
+                    compileStatements();
+                }
+                t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</subroutineBody>");
+        }
+
+        public void compileVarDec() {
+            output.add("<varDec>");
+            do {
+                outputToken();
+                if (t.isSymbol(";")) {
+                    break;
+                }
+                t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</varDec>");
+        }
+
+        public void compileStatements() {
+            output.add("<statements>");
+            while (true) {
+                if (t.isSymbol("}")) {
+                    break;
+                }
+                compileStatement();
+            }
+            output.add("</statements>");
+        }
+
+        public void compileStatement() {
+            if (t.tokenType() == TokenType.KEYWORD) {
+                KeyWordType k = t.keyWord();
+                if (t.hasMoreTokens()) {
+                    switch (t.keyWord()) {
+                        case LET -> compileLet();
+                        case IF -> compileIf();
+                        case WHILE -> compileWhile();
+                        case DO -> compileDo();
+                        case RETURN -> compileReturn();
+                        default -> {}
+                    }
+                }
+            } else {
+                throw new RuntimeException(t.toString());
             }
         }
 
-        public void compileClassVarDec() {
-            output.add("<classVarDec>");
-            outputToken();
-            while (t.hasMoreTokens()) {
-                t.advance();
-                outputToken();
-                if (t.tokenType() == TokenType.SYMBOL && ";".equals(t.symbol())) {
+        public void compileLet() {
+            output.add("<letStatement>");
+            do {
+                if (t.isSymbol("=")) {
+                    outputToken();
+                    t.advance();
+                    compileExpression();
+                } else if (t.isSymbol("[")) {
+                    outputToken();
+                    t.advance();
+                    compileExpression();
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                } else {
+                    outputToken();
+                }
+                if (t.isSymbol(";")) {
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
                     break;
                 }
+                t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</letStatement>");
+            System.out.println("let end" + t);                            
+        }
+
+        public void compileDo() {
+            output.add("<doStatement>");
+            do {
+                if (t.isSymbol(";")) {
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                    break;
+                }                 
+                if (t.isSymbol("(")) {
+                    // subroutine call
+                    outputToken();
+                    t.advance();
+                    compileExpressionList();
+                    outputToken();
+                    if (t.hasMoreTokens()){
+                        t.advance();
+                    }
+                } else {
+                    outputToken();
+                }
+                t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</doStatement>");
+        }
+
+        public void compileReturn() {
+            output.add("<returnStatement>");
+            do {
+                if (t.isKeyWord(KeyWordType.RETURN)) {
+                    outputToken();
+                } else if (t.isSymbol(";")) {
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                    break;
+                } else {
+                    compileExpression();
+                    if (t.isSymbol(";")) {
+                        outputToken();
+                        if (t.hasMoreTokens()) {
+                            t.advance();
+                        }
+                        break;
+                    }
+                }
+                t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</returnStatement>");    
+        }
+
+        public void compileExpression() {
+            output.add("<expression>");
+            do {
+                // token is op?
+                if (t.isSymbol("+", "-", "*", "/", "&", "|", "<", ">", "=")) {
+                    outputToken();
+                    t.advance();
+                } else {
+                    // term
+                    compileTerm();
+                    if (t.isSymbol(")", "]", ";", ",")) {
+                        break;
+                    }
+                }
+            } while (t.hasMoreTokens());
+            output.add("</expression>");
+            System.out.println("exp end" + t);
+        }
+
+        public void compileTerm() {
+            output.add("<term>");
+            TokenType previousType = t.tokenType();
+            while (t.hasMoreTokens())  {
+                if (t.isSymbol(";", ",", ")", "=", "+", "<", "&", ">", "-", "]", "/")) {
+                    break;
+                }
+                if (previousType == TokenType.IDENTIFIER && t.isSymbol("(")) {
+                    // subroutine call
+                    outputToken();
+                    t.advance();
+                    compileExpressionList();
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                } else {
+                    switch (t.tokenType()) {
+                        case INT_CONST, STRING_CONST, KEYWORD, IDENTIFIER -> outputToken();
+                        case SYMBOL -> {
+                            if (t.isSymbol("[", "(")) {
+                                outputToken();
+                                t.advance();
+                                compileExpression();
+                                outputToken();
+                                if (t.hasMoreTokens()) {
+                                    t.advance();
+                                }
+                            } else if (t.isSymbol("-", "~")) {
+                                // unary op
+                                outputToken();
+                                t.advance();
+                                compileTerm();
+                            } else {
+                                outputToken();
+                            }
+                        }
+                    }
+                }
+                if (t.isSymbol("]")) {
+                    outputToken();
+                    t.advance();
+                    break;
+                } else if (t.isSymbol(")")) {
+                    break;
+                }
+                previousType = t.tokenType();
+                t.advance();
+            } 
+            output.add("</term>");
+        }
+
+        public void compileExpressionList() {
+            output.add("<expressionList>");
+            do {
+                if (t.isSymbol(")")) {
+                    break;
+                }
+                compileExpression();
+                if (t.isSymbol(")")) {
+                    break;
+                }
+                if (t.isSymbol(",")) {
+                    outputToken();
+                }
+                t.advance();
+            } while (t.hasMoreTokens());
+            output.add("</expressionList>");            
+        }
+
+        public void compileIf() {
+            output.add("<ifStatement>");
+            do {
+                if (t.isSymbol("(")) {
+                    outputToken();
+                    t.advance();
+                    compileExpression();
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                } else if (t.isSymbol("{")) {
+                    outputToken();
+                    t.advance();
+                    compileStatements();
+                } else {
+                    outputToken();
+                }
+                if (t.isSymbol("}")) {
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                    break;
+                }                
+                t.advance();                  
+            } while (t.hasMoreTokens());
+            output.add("</ifStatement>");
+        }
+
+        public void compileWhile() {
+            output.add("<whileStatement>");
+            while (t.hasMoreTokens()) {
+                if (t.isSymbol("(")) {
+                    outputToken();
+                    t.advance();
+                    compileExpression();
+                    outputToken();
+                } else if (t.isSymbol("{")) {
+                    outputToken();
+                    t.advance();
+                    compileStatements();
+                } else if (t.isSymbol(")")) {
+                    t.advance();
+                    continue;
+                } else {
+                    outputToken();
+                }
+                if (t.isSymbol("}")) {
+                    outputToken();
+                    if (t.hasMoreTokens()) {
+                        t.advance();
+                    }
+                    break;
+                }                
+                t.advance();                  
             }
-            output.add("<classVarDec>");
+            output.add("</whileStatement>");
         }
 
         private void outputToken() {

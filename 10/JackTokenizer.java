@@ -188,12 +188,20 @@ public class JackTokenizer {
         return this.currentToken.value();
     }
 
-
-    public String value() {
-        return this.currentToken.value();
+    public boolean isSymbol(String... candidates) {
+        return this.currentToken.tokenType() == TokenType.SYMBOL && Arrays.asList(candidates).contains(this.symbol());
     }
 
-    public String line() {
-        return this.currentLine;
+    public boolean isKeyWord() {
+        return this.currentToken.tokenType() == TokenType.KEYWORD;
+    }
+
+    public boolean isKeyWord(KeyWordType... keys) {
+        return this.currentToken.tokenType() == TokenType.KEYWORD && Arrays.asList(keys).contains(this.keyWord());
+    }
+
+    @Override
+    public String toString() {
+        return "JackTokenizer: " + this.currentToken.value() + " : \"" + this.currentLine + "\"";
     }
 }
