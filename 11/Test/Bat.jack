@@ -1,0 +1,27 @@
+class Bat {
+
+    // The screen location
+    field int x, y;
+
+    // The width and height
+    field int width, height;
+
+    // The direction of the bat's movement
+    field int direction; // 1 = left, 2 = right
+
+    constructor Bat new(int Ax, int Ay, int Awidth, int Aheight) {
+        let x = Ax;
+        let y = Ay;
+        let width = Awidth;
+        let height = Aheight;
+        let direction = 2;
+    
+            return this;
+        }
+
+    method void draw() {
+        do Screen.drawRectangle(x, y, x + width, y + height);
+        return;
+    }
+
+}
