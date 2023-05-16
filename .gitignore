@@ -1,3 +1,6 @@
 *.out
 *.class
 *.dat
+.idea
+*.iml
+out
