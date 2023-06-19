@@ -1,0 +1,80 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * Memory operations library.
+ */ 
+class Memory {
+
+    static Array ram;
+    static Array heap;
+    static Array freeList;
+
+    /** Initializes memory parameters. */
+    function void init() {
+        let ram = 0;
+        let heap = 2048;
+        let freeList = 2048;
+        let heap[0] = 0;
+        let heap[1] = 14335;
+        let freeList[0] = heap[0];
+        let freeList[1] = heap[1];
+        return;
+    }
+
+    /** Returns the value of the main memory at the given address. */
+    function int peek(int address) {
+        return ram[address];
+    }
+
+    /** Sets the value of the main memory at this address
+     *  to the given value. */
+    function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
+    }
+
+    /** finds and allocates from the heap a memory block of the 
+     *  specified size and returns a reference to its base address. */
+    function int alloc(int size) {
+        var Array addr;
+        var Array segment;
+        let segment = freeList;
+        while (true) {
+            if ((size + 2) < (segment[1] + 1)) {
+                let addr = segment + 1 + segment[1] - size;
+                if (segment[1] = (size + 2)) {
+                    let freeList = segment[0];
+                } else {
+                    let segment[1] = segment[1] - size - 2;
+                }
+                let addr[-1] = size;
+                return addr;
+            } else {
+                let segment = segment[0];
+            }
+            if (segment[0] = 0) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    /** De-allocates the given object and frees its space. */
+    function void deAlloc(int object) {
+        var Array block, segment;
+        let block = object - 2;
+        let block[0] = 0;
+        let segment = freeList;
+        while (true) {
+            if (segment[0] = 0) {
+                let segment[0] = block;
+                return;
+            }
+            let segment = segment[0];
+        }
+        return;
+    }    
+}

@@ -1,0 +1,144 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Screen.jack
+
+/**
+ * Graphic screen library.
+ */
+class Screen {
+
+    static boolean isBlack;
+
+    /** Initializes the Screen. */
+    function void init() {
+        let isBlack = true;
+        return;
+    }
+
+    /** Erases the whole screen. */
+    function void clearScreen() {
+        return;
+    }
+
+    /** Sets the color to be used in further draw commands
+     *  where white = false, black = true. */
+    function void setColor(boolean b) {
+        let isBlack = b;
+        return;
+    }
+
+    /** Draws the (x, y) pixel. */
+    function void drawPixel(int x, int y) {
+        do Screen.drawPixelWithColor(x, y, true);
+        return;
+    }
+
+    function void drawPixelWithColor(int x, int y, boolean isBlack) {
+        var int address, value, index, mask;
+        let address = (32 * y) + (x / 16);
+        let value = Memory.peek(16384 + address);
+        let index = x - (16 * (x / 16));
+
+        if (isBlack) {
+            let mask = 1;
+            while (0 < index) {
+                let mask = mask * 2;
+                let index = index - 1;
+            }
+            do Memory.poke(16384 + address, value | mask);
+        } else {
+            let mask = -2;
+            while (0 < index) {
+                let mask = (mask * 2) + 1;
+                let index = index - 1;
+            }
+            do Memory.poke(16384 + address, value & mask);
+        }
+        return;
+    }    
+
+    /** Draws a line from (x1, y1) to (x2, y2). */
+    function void drawLine(int x1, int y1, int x2, int y2) {
+        do Screen.drawLineWithColor(x1, y1, x2, y2, true);
+        return;
+    }
+
+
+    function void drawLineWithColor(int x1, int y1, int x2, int y2, boolean isBlack) {
+        var int a, b, diff, dx, dy, incA, incB, absDx, absDy;
+        let a = 0;
+        let b = 0;
+        let diff = 0;
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let incA = 1;
+        if (dx < 0) {
+            let incA = -1;
+        }
+        let incB = 1;
+        if (dy < 0) {
+            let incB = -1;
+        }
+        let absDx = Math.abs(dx);
+        let absDy = Math.abs(dy);
+        while ((Math.abs(a) < (absDx + 1)) & (Math.abs(b) < (absDy + 1))) {
+            do Screen.drawPixelWithColor(x1 + a, y1 + b, isBlack);
+            if (diff < 0 | (diff = 0 & absDx > absDy)) {
+                let a = a + incA;
+                let diff = diff + absDy;
+            } else {
+                let b = b + incB;
+                let diff = diff - absDx;
+            }          
+        }
+        
+        return;
+    }    
+
+    /** Draws a filled rectangle where the top left corner
+     *  is (x1, y1) and the bottom right corner is (x2, y2). */
+    function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int currentY;
+        let currentY = y1;
+        if (isBlack) {
+            while (currentY < y2) {
+                do Screen.drawLineWithColor(x1, currentY, x2, currentY, true);
+                let currentY = currentY + 1;
+            }
+        } else {
+            while (currentY < y2) {
+                do Screen.drawLineWithColor(x1, currentY, x2, currentY, false);
+                let currentY = currentY + 1;
+            }
+            do Screen.drawLine(x1, y1, x1, y2);
+            do Screen.drawLine(x1, y1, x2, y1);
+            do Screen.drawLine(x2, y2, x2, y1);
+            do Screen.drawLine(x2, y2, x1, y2);
+        }
+        return;
+    }
+
+    /** Draws a filled circle of radius r around (cx, cy). */
+    function void drawCircle(int cx, int cy, int r) {
+        var int height;
+        var int fromCenter;
+        let height = -r;
+        while (height < r) {
+            let fromCenter = Math.sqrt((r * r) - (height * height));
+            do Screen.drawLineWithColor(cx - fromCenter, cy + height, cx + fromCenter, cy + height, isBlack);
+            let height = height + 1;
+        }
+        if (~isBlack) {
+            let height = -r;
+            while (height < r) {
+                let fromCenter = Math.sqrt((r * r) - (height * height));
+                do Screen.drawPixel(cx - fromCenter, cy + height);
+                do Screen.drawPixel(cx + fromCenter, cy + height);
+                let height = height + 1;
+            }
+        }
+        return;
+    }
+
+}

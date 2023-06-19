@@ -1,0 +1,132 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/String.jack
+
+/**
+ * Represents a String object. Implements the String type.
+ */
+class String {
+
+    field Array chars;
+    field int length;
+
+    /** Constructs a new empty String with a maximum length of maxLength. */
+    constructor String new(int maxLength) {
+        if (0 < maxLength) {
+            let chars = Array.new(maxLength);
+        }
+        let length = 0;
+        return this;
+    }
+
+    /** De-allocates the string and frees its space. */
+    method void dispose() {
+        if (0 < length) {
+            do chars.dispose();
+        }
+        return;
+    }
+
+    /** Returns the current length of this String. */
+    method int length() {
+        return length;
+    }
+
+    /** Returns the character at location j. */
+    method char charAt(int j) {
+        return chars[j];
+    }
+
+    /** Sets the j'th character of this string to be c. */
+    method void setCharAt(int j, char c) {
+        let chars[j] = c;
+        return;
+    }
+
+    /** Appends the character c to the end of this String.
+     *  Returns this string as the return value. */
+    method String appendChar(char c) {
+        let chars[length] = c;
+        let length = length + 1;
+        return this;
+    }
+
+    /** Erases the last character from this String. */
+    method void eraseLastChar() {
+        let chars[length] = 0;
+        let length = length - 1;
+        return;
+    }
+
+    /** Returns the integer value of this String until the first non
+     *  numeric character. */
+    method int intValue() {
+        return String.string2Int(this);
+    }
+
+    function int string2Int(String str) {
+        var int val, i, length, d;
+        var boolean isNegative;
+        let i = 0;
+        let length = str.length();
+        let isNegative = false;
+        while (i < length) {
+            let d = str.charAt(i);
+            if (d = 45) {
+                let isNegative = true;
+            } else {
+                let val = val * 10 + (d - 48);
+            }
+            let i = i + 1;
+        }
+        if (isNegative) {
+            let val = val * -1;
+        }
+        return val;
+    }
+
+    /** Sets this String to hold a representation of the given number. */
+    method void setInt(int number) {
+        var int l, i;
+        let l = length;
+        let i = 0;
+        while (i < l) {
+            do eraseLastChar();
+            let i = i + 1;
+        }
+        if (number < 0) {
+            do appendChar(45);
+            let number = number * -1;            
+        }
+        do int2String(number);
+        return;
+    }
+
+    method void int2String(int number) {
+        var int lastDigit;
+        let lastDigit = number - (number / 10 * 10);
+        if (number < 10) {
+            do appendChar(lastDigit + 48);
+            return;
+        }
+        do int2String(number / 10);
+        do appendChar(lastDigit + 48);
+        return;
+    }
+
+    /** Returns the new line character. */
+    function char newLine() {
+        return 128;
+    }
+
+    /** Returns the backspace character. */
+    function char backSpace() {
+        return 129;
+    }
+
+    /** Returns the double quote (") character. */
+    function char doubleQuote() {
+        return 34;
+    }
+}

@@ -1,0 +1,156 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Math.jack
+
+/**
+ * A basic math library.
+ */
+class Math {
+
+    static Array twoToThe;
+
+    /** Initializes the library. */
+    function void init() {
+        var int i, num;
+        let i = 0;
+        let num = 1;
+        let twoToThe = Array.new(16);
+        while (i < 16) {
+            let twoToThe[i] = num;
+            let num = num + num;
+            let i = i + 1;
+        }
+        return;
+    }
+
+    function boolean bit(int x, int j) {
+        var int num;
+        var int result;
+        let num = twoToThe[j];
+        let result = x & num;
+        return num = result;
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        }
+        return x;
+    }
+
+    /** Returns the product of x and y. */
+    function int multiply(int x, int y) {
+        var int sum, digit, shiftedX;
+        let sum = 0;
+        let digit = 0;
+        let shiftedX = x;
+        while (digit < 16) {
+            if (Math.bit(y, digit)) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let digit = digit + 1;
+        }
+        return sum;
+    }
+
+    function String int2String(int n) {
+        var int lastDigit;
+        var String s, result;
+        let lastDigit = n - n / 10;
+        let s = String.new(1);
+        let s = nStr.setInt(lastDigit);
+        if (n < 10) {
+            return s;
+        } else  {
+            let result = Math.int2String(n / 10);
+            let result = result.append(s.charAt(0));
+            return result;
+        }
+    }
+
+    function int String2int(String s){
+        var int v, i, d;
+        var String s;
+        let v = 0;
+        let i = 0;
+        while (i < s.length()) {
+            let s = String.new(1);
+            let s = s.setCharAt(0, s.charAt(i));
+            let d = s.intValue();
+            let v = v * 10 + d;
+            let i = i + 1;
+        }
+        return v;
+    }
+
+    /** Returns the integer part of x/y. */
+    function int divide(int x, int y) {
+        var int q, signX, signY;
+        if (y < 0) {
+            return 0;
+        }
+        if (x < 0) {
+            let signX = -1;
+            let x = -x;
+        } else {
+            let signX = 1;
+        }
+        if (y < 0) {
+            let signY = -1;
+            let y = -y;
+        } else {
+            let signY = 1;
+        }
+        if (y > x) {
+            return 0;
+        }
+        let q = Math.divide(x, 2 * y);
+        if ((x - (2 * q * y)) < y) {
+            return 2 * q * signX * signY;
+        } else {
+            return 2 * q * signX * signY + 1;
+        }
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x) {
+        var int y, j, i, num, sqrt;
+        let y = 0;
+        let j = 16 / 2 - 1;
+        while (j > -1) {
+            let i = j;
+            let num = 1;
+            while (0 < i) {
+                let num = num * 2;
+                let i = i - 1;
+            }
+            let sqrt = (y + num) * (y + num);
+            if (sqrt < (x + 1)) {
+                if (sqrt > 0) {
+                    let y = y + num;    `
+                }
+            }
+            let j = j - 1;
+        }
+        return y;
+    }
+
+    /** Returns the greater number. */
+    function int max(int a, int b) {
+        if (a < b) {
+            return b;
+        }
+        return a;
+    }
+
+    /** Returns the smaller number. */
+    function int min(int a, int b) {
+        if (a < b){
+            return a;
+        }
+        return b;
+    }
+}
